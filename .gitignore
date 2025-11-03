@@ -6,4 +6,4 @@ __pycache__/
 database.db
 
 # Archivo de variables de entorno
-.env  # <-- MUY IMPORTANTE
+.env 
