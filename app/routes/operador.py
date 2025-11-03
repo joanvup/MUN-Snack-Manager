@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from app import db
 from app.models.models import Participante, Registro, Configuracion
-from datetime import datetime
+from datetime import datetime, timedelta
 
 operador_bp = Blueprint('operador', __name__)
 
@@ -28,6 +28,24 @@ def validar_qr():
 
     if not participante:
         return jsonify({'success': False, 'message': 'Participante no encontrado.'}), 404
+    
+    # --- INICIO: LÓGICA DE COOLDOWN ---
+    config = Configuracion.query.first()
+    cooldown_period = timedelta(minutes=config.cooldown_minutos if config else 60)
+    
+    # Buscar el último registro para este participante
+    ultimo_registro = Registro.query.filter_by(id_participante=participante.id_participante).order_by(Registro.fecha_hora.desc()).first()
+
+    if ultimo_registro:
+        tiempo_desde_ultimo_registro = datetime.utcnow() - ultimo_registro.fecha_hora
+        if tiempo_desde_ultimo_registro < cooldown_period:
+            tiempo_restante = cooldown_period - tiempo_desde_ultimo_registro
+            minutos_restantes = round(tiempo_restante.total_seconds() / 60)
+            return jsonify({
+                'success': False,
+                'message': f'Este participante ya fue registrado hace poco. Inténtelo de nuevo en {minutos_restantes} minutos.'
+            })
+    # --- FIN: LÓGICA DE COOLDOWN ---
 
     if participante.saldo_merienda > 0:
         participante.saldo_merienda -= 1

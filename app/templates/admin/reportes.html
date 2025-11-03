@@ -21,7 +21,7 @@
             {% for r in registros %}
             <tr class="hover:bg-gray-100">
                 <td class="border-t py-4 px-6">{{ r.id_registro }}</td>
-                <td class="border-t py-4 px-6">{{ r.fecha_hora.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td class="border-t py-4 px-6">{{ r.fecha_hora | to_local_time }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.nombre_participante }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.committe.nombre_committe }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.pais.nombre_pais }}</td>

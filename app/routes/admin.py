@@ -71,6 +71,7 @@ def configuracion():
         config.nombre_evento = request.form.get('nombre_evento')
         config.fechas_evento = request.form.get('fechas_evento')
         config.meriendas_totales = int(request.form.get('meriendas_totales'))
+        config.cooldown_minutos = int(request.form.get('cooldown_minutos'))
         
         if 'logo_evento' in request.files:
             logo_file = request.files['logo_evento']

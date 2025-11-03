@@ -44,6 +44,7 @@ class Configuracion(db.Model):
     logo_evento = db.Column(db.String(100), nullable=True)
     fechas_evento = db.Column(db.String(150), nullable=False)
     meriendas_totales = db.Column(db.Integer, default=6, nullable=False)
+    cooldown_minutos = db.Column(db.Integer, default=60, nullable=False)
 
 class Registro(db.Model):
     id_registro = db.Column(db.Integer, primary_key=True)

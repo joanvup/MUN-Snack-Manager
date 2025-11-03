@@ -18,6 +18,12 @@
             <label for="meriendas_totales" class="block text-gray-700 font-semibold mb-2">Total de Meriendas por Participante</label>
             <input type="number" id="meriendas_totales" name="meriendas_totales" value="{{ config.meriendas_totales }}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
         </div>
+        <!-- NUEVO CAMPO PARA EL COOLDOWN -->
+        <div class="mb-6">
+            <label for="cooldown_minutos" class="block text-gray-700 font-semibold mb-2">Tiempo de Espera entre Registros (minutos)</label>
+            <input type="number" id="cooldown_minutos" name="cooldown_minutos" value="{{ config.cooldown_minutos }}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            <p class="text-xs text-gray-500 mt-1">Evita que un mismo participante sea escaneado repetidamente.</p>
+        </div>
         <div class="mb-6">
             <label for="logo_evento" class="block text-gray-700 font-semibold mb-2">Logo del Evento</label>
             {% if config.logo_evento %}

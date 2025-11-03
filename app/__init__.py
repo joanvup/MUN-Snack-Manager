@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
+from datetime import datetime
+import pytz # <-- Importar pytz
 
 load_dotenv()  # <-- Cargar las variables del archivo .env
 
@@ -13,6 +15,26 @@ login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.login_message = "Por favor, inicie sesión para acceder a esta página."
 login_manager.login_message_category = "info"
+
+# --- INICIO: FILTRO DE ZONA HORARIA PERSONALIZADO ---
+def format_to_local_time(utc_dt):
+    """Filtro de Jinja2 para convertir una fecha UTC a la hora local de Bogotá."""
+    if not utc_dt:
+        return ""
+    # Define las zonas horarias
+    utc_zone = pytz.timezone('UTC')
+    local_zone = pytz.timezone('America/Bogota')
+    
+    # Convierte la fecha naive de la DB a una fecha "aware" en UTC
+    aware_utc_dt = utc_zone.localize(utc_dt)
+    
+    # Convierte a la zona horaria local
+    local_dt = aware_utc_dt.astimezone(local_zone)
+    
+    # Formatea la fecha para mostrarla
+    return local_dt.strftime('%Y-%m-%d %I:%M:%S %p') # Formato 12 horas con AM/PM
+# --- FIN: FILTRO ---
+
 
 def create_app():
     app = Flask(__name__)
@@ -46,6 +68,9 @@ def create_app():
     # Configuración de carpetas
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
     app.config['PHOTOS_FOLDER'] = os.path.join(app.config['UPLOAD_FOLDER'], 'fotos')
+
+     # --- REGISTRAR EL FILTRO EN LA APP ---
+    app.jinja_env.filters['to_local_time'] = format_to_local_time
 
     # Crear carpetas si no existen
     for folder in ['uploads', 'fotos', 'logos_committe', 'logos_institucion', 'logos_evento', 'iconos_bandera']:
