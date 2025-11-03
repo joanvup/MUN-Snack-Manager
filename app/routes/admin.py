@@ -15,6 +15,8 @@ import zipfile
 from flask import send_file
 from app import bcrypt
 
+from datetime import datetime, time
+
 # Creación del Blueprint para las rutas de administración
 admin_bp = Blueprint('admin', __name__)
 
@@ -430,16 +432,79 @@ def descargar_plantilla():
 @login_required
 # @admin_required
 def reportes():
-    """Muestra un reporte de todas las meriendas entregadas."""
-    # Usar joinedload para optimizar la consulta y evitar N+1 queries en la plantilla
-    registros = Registro.query.options(
-        db.joinedload(Registro.participante).joinedload(Participante.committe),
-        db.joinedload(Registro.participante).joinedload(Participante.pais),
-        db.joinedload(Registro.participante).joinedload(Participante.institucion),
-        db.joinedload(Registro.operador)
-    ).order_by(Registro.fecha_hora.desc()).all()
+    """Muestra un reporte de meriendas con filtros y ordenación."""
+    # --- 1. OBTENER PARÁMETROS DE LA URL ---
+    fecha_str = request.args.get('fecha')
+    participante_id = request.args.get('participante_id')
+    committe_id = request.args.get('committe_id')
+    institucion_id = request.args.get('institucion_id')
+    sort_by = request.args.get('sort_by', 'fecha_hora') # Default: ordenar por fecha
+    order = request.args.get('order', 'desc') # Default: descendente (más nuevos primero)
+
+    # --- 2. CONSTRUIR LA CONSULTA BASE ---
+    query = Registro.query.join(Participante).join(User).join(Committe).join(InstitucionEducativa)
+
+    # --- 3. APLICAR FILTROS DINÁMICAMENTE ---
+    if fecha_str:
+        try:
+            fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+            start_of_day = datetime.combine(fecha_obj, time.min)
+            end_of_day = datetime.combine(fecha_obj, time.max)
+            query = query.filter(Registro.fecha_hora.between(start_of_day, end_of_day))
+        except ValueError:
+            flash('Formato de fecha inválido.', 'danger')
+    
+    if participante_id:
+        query = query.filter(Registro.id_participante == participante_id)
+    
+    if committe_id:
+        query = query.filter(Participante.committe_id == committe_id)
+        
+    if institucion_id:
+        query = query.filter(Participante.institucion_id == institucion_id)
+
+    # --- 4. APLICAR ORDENACIÓN DINÁMICAMENTE ---
+    sort_columns = {
+        'fecha_hora': Registro.fecha_hora,
+        'participante': Participante.nombre_participante,
+        'committe': Committe.nombre_committe,
+        'institucion': InstitucionEducativa.nombre_institucion,
+        'operador': User.username
+    }
+    
+    sort_column = sort_columns.get(sort_by, Registro.fecha_hora)
+    
+    if order == 'asc':
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
+    # --- 5. EJECUTAR LA CONSULTA Y PREPARAR DATOS PARA LA PLANTILLA ---
+    registros = query.all()
+    
+    # Obtener datos para los menús desplegables del filtro
+    participantes = Participante.query.order_by(Participante.nombre_participante).all()
+    committes = Committe.query.order_by(Committe.nombre_committe).all()
+    instituciones = InstitucionEducativa.query.order_by(InstitucionEducativa.nombre_institucion).all()
     config = Configuracion.query.first()
-    return render_template('admin/reportes.html', registros=registros, config=config)
+
+    return render_template(
+        'admin/reportes.html', 
+        registros=registros, 
+        config=config,
+        # Pasar los datos para los filtros
+        participantes=participantes,
+        committes=committes,
+        instituciones=instituciones,
+        # Pasar los valores actuales de los filtros para mantener el estado del formulario
+        fecha=fecha_str,
+        participante_id=participante_id,
+        committe_id=committe_id,
+        institucion_id=institucion_id,
+        # Pasar los valores de ordenación para construir los enlaces de las columnas
+        sort_by=sort_by,
+        order=order
+    )
 
 # --- RUTA PARA GENERACIÓN DE CÓDIGOS QR ---
 

@@ -4,33 +4,91 @@
 {% block header %}Reporte de Meriendas Entregadas{% endblock %}
 
 {% block content %}
+<!-- INICIO: Formulario de Filtros -->
+<div class="bg-white p-4 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-semibold mb-3">Filtrar Reporte</h3>
+    <form method="GET" action="{{ url_for('admin.reportes') }}">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <!-- Filtro por Fecha -->
+            <div>
+                <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
+                <input type="date" name="fecha" id="fecha" value="{{ fecha or '' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <!-- Filtro por Participante -->
+            <div>
+                <label for="participante_id" class="block text-sm font-medium text-gray-700">Participante</label>
+                <select name="participante_id" id="participante_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    <option value="">Todos</option>
+                    {% for p in participantes %}
+                        <option value="{{ p.id_participante }}" {% if p.id_participante|string == participante_id %}selected{% endif %}>{{ p.nombre_participante }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Filtro por Comité -->
+            <div>
+                <label for="committe_id" class="block text-sm font-medium text-gray-700">Comité</label>
+                <select name="committe_id" id="committe_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    <option value="">Todos</option>
+                    {% for c in committes %}
+                        <option value="{{ c.id_committe }}" {% if c.id_committe|string == committe_id %}selected{% endif %}>{{ c.nombre_committe }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Filtro por Institución -->
+            <div>
+                <label for="institucion_id" class="block text-sm font-medium text-gray-700">Institución</label>
+                <select name="institucion_id" id="institucion_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    <option value="">Todas</option>
+                    {% for i in instituciones %}
+                        <option value="{{ i.id_institucion }}" {% if i.id_institucion|string == institucion_id %}selected{% endif %}>{{ i.nombre_institucion }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Botones -->
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Filtrar</button>
+                <a href="{{ url_for('admin.reportes') }}" class="w-full text-center bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400">Limpiar</a>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- FIN: Formulario de Filtros -->
+
+<!-- Tabla de Resultados -->
 <div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
     <table class="w-full whitespace-nowrap">
         <thead>
             <tr class="text-left font-bold">
-                <th class="pb-4 pt-6 px-6">ID Registro</th>
-                <th class="pb-4 pt-6 px-6">Fecha y Hora</th>
-                <th class="pb-4 pt-6 px-6">Participante</th>
-                <th class="pb-4 pt-6 px-6">Comité</th>
-                <th class="pb-4 pt-6 px-6">País</th>
-                <th class="pb-4 pt-6 px-6">Institución</th>
-                <th class="pb-4 pt-6 px-6">Operador</th>
+                <!-- INICIO: Encabezados Clickeables -->
+                {% macro sort_link(column_name, display_text) %}
+                    {% set next_order = 'desc' if sort_by == column_name and order == 'asc' else 'asc' %}
+                    <a href="{{ url_for('admin.reportes', sort_by=column_name, order=next_order, fecha=fecha, participante_id=participante_id, committe_id=committe_id, institucion_id=institucion_id) }}" class="hover:text-blue-600">
+                        {{ display_text }}
+                        {% if sort_by == column_name %}
+                            {{ '▲' if order == 'asc' else '▼' }}
+                        {% endif %}
+                    </a>
+                {% endmacro %}
+
+                <th class="pb-4 pt-6 px-6">{{ sort_link('fecha_hora', 'Fecha y Hora') }}</th>
+                <th class="pb-4 pt-6 px-6">{{ sort_link('participante', 'Participante') }}</th>
+                <th class="pb-4 pt-6 px-6">{{ sort_link('committe', 'Comité') }}</th>
+                <th class="pb-4 pt-6 px-6">{{ sort_link('institucion', 'Institución') }}</th>
+                <th class="pb-4 pt-6 px-6">{{ sort_link('operador', 'Operador') }}</th>
             </tr>
         </thead>
         <tbody>
             {% for r in registros %}
             <tr class="hover:bg-gray-100">
-                <td class="border-t py-4 px-6">{{ r.id_registro }}</td>
                 <td class="border-t py-4 px-6">{{ r.fecha_hora | to_local_time }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.nombre_participante }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.committe.nombre_committe }}</td>
-                <td class="border-t py-4 px-6">{{ r.participante.pais.nombre_pais }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.institucion.nombre_institucion }}</td>
                 <td class="border-t py-4 px-6">{{ r.operador.username }}</td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="7" class="text-center py-10">Aún no hay registros de entrega.</td>
+                <td colspan="5" class="text-center py-10 text-gray-500">No se encontraron registros que coincidan con los filtros.</td>
             </tr>
             {% endfor %}
         </tbody>
