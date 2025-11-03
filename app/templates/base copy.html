@@ -6,46 +6,32 @@
     <title>{% block title %}{% endblock %} - MUN Snack Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- PWA HEADERS -->
+    <!-- === PWA HEADERS === -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <!-- Soporte para Apple -->
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
     <meta name="apple-mobile-web-app-status-bar" content="#1f2937">
+    <!-- Color del tema para la barra de estado -->
     <meta name="theme-color" content="#1f2937"/>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
-    <div class="relative min-h-screen lg:flex"> <!-- Se cambia 'flex h-screen' por 'relative min-h-screen lg:flex' -->
-
-        <!-- INICIO: Overlay para el fondo oscuro en móvil -->
-        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>
-        <!-- FIN: Overlay -->
-
-        <!-- INICIO: Sidebar (Menú Lateral) -->
-        <!-- Clases modificadas para la responsividad -->
-        <div id="sidebar" class="bg-gray-800 text-white w-64 px-4 py-4 space-y-6 fixed inset-y-0 left-0 transform -translate-x-full 
-                             lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
-            
-            <!-- Logo y Nombre del Evento -->
-            <div class="flex items-center justify-between">
-                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center">
-                    {% if config and config.logo_evento %}
-                        <img src="{{ url_for('static', filename='uploads/logos_evento/' + config.logo_evento) }}" alt="Logo Evento" class="h-10 w-10 mr-3">
-                    {% endif %}
-                    <h1 class="text-xl font-bold">{{ config.nombre_evento if config else 'MUN Manager' }}</h1>
-                </a>
-                <!-- INICIO: Botón para cerrar el menú en móvil -->
-                <button id="close-menu-button" class="lg:hidden text-gray-400 hover:text-white">&times;</button>
-                <!-- FIN: Botón de cierre -->
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        {% if current_user.is_authenticated %}
+        <div class="w-64 bg-gray-800 text-white flex flex-col p-4 shadow-lg">
+            <div class="flex items-center mb-8">
+                {% if config and config.logo_evento %}
+                    <img src="{{ url_for('static', filename='uploads/logos_evento/' + config.logo_evento) }}" alt="Logo Evento" class="h-10 w-10 mr-3">
+                {% endif %}
+                <h1 class="text-xl font-bold">{{ config.nombre_evento if config else 'MUN Manager' }}</h1>
             </div>
             
-            <!-- Menú de Navegación (sin cambios en la lógica interna) -->
             <nav class="flex flex-col space-y-2">
-                <!-- SECCIÓN GENERAL -->
-                <h2 class="px-4 mt-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">General</h2>
+                <h2 class="px-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">General</h2>
                 <a href="{{ url_for('admin.dashboard') }}" class="px-4 py-2 rounded hover:bg-gray-700">Dashboard</a>
                 <a href="{{ url_for('operador.escaner') }}" class="px-4 py-2 rounded hover:bg-gray-700">Escanear QR</a>
                 <a href="{{ url_for('admin.reportes') }}" class="px-4 py-2 rounded hover:bg-gray-700">Reportes</a>
                 
-                <!-- SECCIÓN DE ADMINISTRACIÓN -->
                 {% if current_user.role == 'admin' %}
                     <h2 class="px-4 mt-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Administración</h2>
                     <a href="{{ url_for('admin.participantes') }}" class="px-4 py-2 rounded hover:bg-gray-700">Participantes</a>
@@ -59,29 +45,22 @@
                     <a href="{{ url_for('admin.configuracion') }}" class="px-4 py-2 rounded hover:bg-gray-700">Configuración</a>
                 {% endif %}
             </nav>
-
-            <!-- Info del Usuario -->
-            <div class="mt-auto absolute bottom-4 left-4 right-4">
+            <div class="mt-auto">
                 <p class="text-sm text-gray-400">Usuario: <span class="font-semibold text-gray-200">{{ current_user.username }} ({{ current_user.role }})</span></p>
                 <a href="{{ url_for('auth.logout') }}" class="block w-full text-center mt-2 px-4 py-2 rounded bg-red-600 hover:bg-red-700 transition-colors">Cerrar Sesión</a>
             </div>
         </div>
-        <!-- FIN: Sidebar -->
-
-        <!-- INICIO: Contenido Principal -->
-        <!-- Se añade lg:ml-64 para dejar espacio al sidebar en pantallas grandes -->
-        <div class="flex-1 lg:ml-64">
-            <header class="bg-white shadow-md p-4 z-10 flex justify-between items-center">
-                <!-- INICIO: Botón de Hamburguesa (visible solo en móvil) -->
-                <button id="mobile-menu-button" class="text-gray-700 p-2 lg:hidden">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-                <!-- FIN: Botón de Hamburguesa -->
-
-                <h2 class="text-2xl font-semibold text-gray-700">{% block header %}{% endblock %}</h2>
-                <p class="text-sm text-gray-500 font-medium hidden sm:block">{{ config.fechas_evento if config }}</p>
+        {% endif %}
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <header class="bg-white shadow-md p-4 z-10">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-semibold text-gray-700">{% block header %}{% endblock %}</h2>
+                    <p class="text-sm text-gray-500 font-medium">{{ config.fechas_evento if config }}</p>
+                </div>
             </header>
-            <main class="flex-1 p-4 md:p-6 overflow-y-auto">
+            <main class="flex-1 p-6 overflow-y-auto">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -97,38 +76,13 @@
                 {% block content %}{% endblock %}
             </main>
         </div>
-        <!-- FIN: Contenido Principal -->
     </div>
-
     {% block scripts %}{% endblock %}
-
-    <!-- INICIO: SCRIPT PARA EL MENÚ RESPONSIVO Y PWA -->
+    <!-- === SCRIPT PARA REGISTRAR EL SERVICE WORKER === -->
     <script>
-        // --- Lógica del Menú Móvil ---
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const closeMenuButton = document.getElementById('close-menu-button');
-
-        function openMenu() {
-            sidebar.classList.remove('-translate-x-full');
-            overlay.classList.remove('hidden');
-        }
-
-        function closeMenu() {
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-        }
-
-        mobileMenuButton.addEventListener('click', openMenu);
-        closeMenuButton.addEventListener('click', closeMenu);
-        overlay.addEventListener('click', closeMenu);
-
-
-        // --- Lógica de Registro del Service Worker (PWA) ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register("/sw.js")
+                navigator.serviceWorker.register("/sw.js") 
                     .then(registration => {
                         console.log('ServiceWorker registrado con éxito:', registration.scope);
                     })
@@ -138,6 +92,5 @@
             });
         }
     </script>
-    <!-- FIN: SCRIPT -->
 </body>
 </html>
