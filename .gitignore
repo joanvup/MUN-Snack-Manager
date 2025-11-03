@@ -1,0 +1,9 @@
+# Entornos virtuales
+venv/
+__pycache__/
+
+# Archivos de base de datos locales
+database.db
+
+# Archivo de variables de entorno
+.env  # <-- MUY IMPORTANTE

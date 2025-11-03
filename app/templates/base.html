@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - MUN Snack Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- === PWA HEADERS === -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <!-- Soporte para Apple -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+    <meta name="apple-mobile-web-app-status-bar" content="#1f2937">
+    <!-- Color del tema para la barra de estado -->
+    <meta name="theme-color" content="#1f2937"/>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        {% if current_user.is_authenticated %}
+        <div class="w-64 bg-gray-800 text-white flex flex-col p-4 shadow-lg">
+            <div class="flex items-center mb-8">
+                {% if config and config.logo_evento %}
+                    <img src="{{ url_for('static', filename='uploads/logos_evento/' + config.logo_evento) }}" alt="Logo Evento" class="h-10 w-10 mr-3">
+                {% endif %}
+                <h1 class="text-xl font-bold">{{ config.nombre_evento if config else 'MUN Manager' }}</h1>
+            </div>
+            
+            <nav class="flex flex-col space-y-2">
+                <h2 class="px-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">General</h2>
+                <a href="{{ url_for('admin.dashboard') }}" class="px-4 py-2 rounded hover:bg-gray-700">Dashboard</a>
+                <a href="{{ url_for('operador.escaner') }}" class="px-4 py-2 rounded hover:bg-gray-700">Escanear QR</a>
+                <a href="{{ url_for('admin.reportes') }}" class="px-4 py-2 rounded hover:bg-gray-700">Reportes</a>
+                
+                {% if current_user.role == 'admin' %}
+                    <h2 class="px-4 mt-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Administración</h2>
+                    <a href="{{ url_for('admin.participantes') }}" class="px-4 py-2 rounded hover:bg-gray-700">Participantes</a>
+                    <a href="{{ url_for('admin.committes') }}" class="px-4 py-2 rounded hover:bg-gray-700">Comités</a>
+                    <a href="{{ url_for('admin.paises') }}" class="px-4 py-2 rounded hover:bg-gray-700">Países</a>
+                    <a href="{{ url_for('admin.instituciones') }}" class="px-4 py-2 rounded hover:bg-gray-700">Instituciones</a>
+                    
+                    <h2 class="px-4 mt-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Sistema</h2>
+                    <a href="{{ url_for('admin.usuarios') }}" class="px-4 py-2 rounded hover:bg-gray-700">Usuarios</a>
+                    <a href="{{ url_for('admin.importar_datos') }}" class="px-4 py-2 rounded hover:bg-gray-700">Importar Datos</a>
+                    <a href="{{ url_for('admin.configuracion') }}" class="px-4 py-2 rounded hover:bg-gray-700">Configuración</a>
+                {% endif %}
+            </nav>
+            <div class="mt-auto">
+                <p class="text-sm text-gray-400">Usuario: <span class="font-semibold text-gray-200">{{ current_user.username }} ({{ current_user.role }})</span></p>
+                <a href="{{ url_for('auth.logout') }}" class="block w-full text-center mt-2 px-4 py-2 rounded bg-red-600 hover:bg-red-700 transition-colors">Cerrar Sesión</a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <header class="bg-white shadow-md p-4 z-10">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-semibold text-gray-700">{% block header %}{% endblock %}</h2>
+                    <p class="text-sm text-gray-500 font-medium">{{ config.fechas_evento if config }}</p>
+                </div>
+            </header>
+            <main class="flex-1 p-6 overflow-y-auto">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="p-4 mb-4 text-sm text-center rounded-lg 
+                                {% if category == 'danger' %} bg-red-100 text-red-800 
+                                {% elif category == 'success' %} bg-green-100 text-green-800
+                                {% else %} bg-blue-100 text-blue-700 {% endif %}" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    {% block scripts %}{% endblock %}
+    <!-- === SCRIPT PARA REGISTRAR EL SERVICE WORKER === -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("/sw.js") 
+                    .then(registration => {
+                        console.log('ServiceWorker registrado con éxito:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Fallo en el registro del ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

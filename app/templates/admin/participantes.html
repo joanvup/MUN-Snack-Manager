@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Participantes{% endblock %}
+{% block header %}Gestión de Participantes{% endblock %}
+
+{% block content %}
+<!-- Botón de generación de QR -->
+<div class="mb-6 flex justify-end">
+    <a href="{{ url_for('admin.generar_todos_los_qrs') }}" 
+       class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z"/>
+        </svg>
+        Generar y Descargar todos los QR
+    </a>
+</div>
+<!-- Formulario para añadir -->
+<div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <h3 class="text-xl font-semibold mb-4">Añadir Nuevo Participante</h3>
+    <form action="{{ url_for('admin.add_participante') }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        <div>
+            <label for="nombre_participante" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+            <input type="text" name="nombre_participante" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500" required>
+        </div>
+        <div>
+            <label for="foto_participante" class="block text-sm font-medium text-gray-700">Foto (JPG con nombre = ID)</label>
+            <input type="file" name="foto_participante" accept="image/jpeg, image/png" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            <p class="text-xs text-gray-500 mt-1">La app renombrará el archivo con el ID del participante.</p>
+        </div>
+        <div>
+            <label for="committe_id" class="block text-sm font-medium text-gray-700">Comité</label>
+            <select name="committe_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500" required>
+                {% for c in committes %}<option value="{{ c.id_committe }}">{{ c.nombre_committe }}</option>{% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="pais_id" class="block text-sm font-medium text-gray-700">País</label>
+            <select name="pais_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500" required>
+                {% for p in paises %}<option value="{{ p.id_pais }}">{{ p.nombre_pais }}</option>{% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="institucion_id" class="block text-sm font-medium text-gray-700">Institución</label>
+            <select name="institucion_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500" required>
+                {% for i in instituciones %}<option value="{{ i.id_institucion }}">{{ i.nombre_institucion }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="md:col-start-2">
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Añadir Participante</button>
+        </div>
+    </form>
+</div>
+
+<!-- Tabla de participantes -->
+<div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
+    <table class="w-full whitespace-nowrap">
+        <thead>
+            <tr class="text-left font-bold">
+                <th class="pb-4 pt-6 px-6">Foto</th>
+                <th class="pb-4 pt-6 px-6">ID</th>
+                <th class="pb-4 pt-6 px-6">Nombre</th>
+                <th class="pb-4 pt-6 px-6">Comité</th>
+                <th class="pb-4 pt-6 px-6">País</th>
+                <th class="pb-4 pt-6 px-6">Saldo Meriendas</th>
+                <th class="pb-4 pt-6 px-6">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in participantes %}
+            <tr class="hover:bg-gray-50">
+                <td class="border-t py-4 px-6">
+                    {% if p.foto_participante %}
+                    <img src="{{ url_for('static', filename='uploads/fotos/' + p.foto_participante) }}" alt="Foto de {{ p.nombre_participante }}" class="h-10 w-10 rounded-full object-cover">
+                    {% else %}
+                    <span class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-600">Sin foto</span>
+                    {% endif %}
+                </td>
+                <td class="border-t py-4 px-6 font-mono text-sm">{{ p.id_participante }}</td>
+                <td class="border-t py-4 px-6 font-medium">{{ p.nombre_participante }}</td>
+                <td class="border-t py-4 px-6">{{ p.committe.nombre_committe }}</td>
+                <td class="border-t py-4 px-6">{{ p.pais.nombre_pais }}</td>
+                <td class="border-t py-4 px-6 text-center font-bold text-lg">{{ p.saldo_merienda }}</td>
+                <td class="border-t py-4 px-6 flex items-center space-x-4">
+                    <button onclick="openEditModal(this)"
+                            data-id="{{ p.id_participante }}"
+                            data-nombre="{{ p.nombre_participante }}"
+                            data-committe-id="{{ p.committe_id }}"
+                            data-pais-id="{{ p.pais_id }}"
+                            data-institucion-id="{{ p.institucion_id }}"
+                            class="text-indigo-600 hover:text-indigo-900 font-medium">Editar</button>
+                    <form action="{{ url_for('admin.delete_participante', id=p.id_participante) }}" method="POST" onsubmit="return confirm('¿Seguro?');">
+                        <button type="submit" class="text-red-600 hover:text-red-900 font-medium">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Modal de Edición para Participantes -->
+<div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="relative top-10 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <h3 class="text-2xl font-semibold">Editar Participante</h3>
+        <form id="editForm" method="POST" enctype="multipart/form-data" class="mt-4 grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+                <label for="edit_nombre" class="block text-sm">Nombre</label>
+                <input type="text" id="edit_nombre" name="nombre_participante" class="mt-1 block w-full border rounded-md" required>
+            </div>
+            <div>
+                <label for="edit_committe" class="block text-sm">Comité</label>
+                <select id="edit_committe" name="committe_id" class="mt-1 block w-full border rounded-md">
+                    {% for c in committes %}<option value="{{ c.id_committe }}">{{ c.nombre_committe }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="edit_pais" class="block text-sm">País</label>
+                <select id="edit_pais" name="pais_id" class="mt-1 block w-full border rounded-md">
+                    {% for p in paises %}<option value="{{ p.id_pais }}">{{ p.nombre_pais }}</option>{% endfor %}
+                </select>
+            </div>
+             <div>
+                <label for="edit_institucion" class="block text-sm">Institución</label>
+                <select id="edit_institucion" name="institucion_id" class="mt-1 block w-full border rounded-md">
+                
+                    {% for i in instituciones %}<option value="{{ i.id_institucion }}">{{ i.nombre_institucion }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-span-2">
+                <label for="edit_foto" class="block text-sm">Reemplazar Foto (Opcional)</label>
+                <input type="file" id="edit_foto" name="foto_participante" class="mt-1 block w-full text-sm">
+            </div>
+            <div class="col-span-2 flex justify-end space-x-2">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const modal = document.getElementById('editModal');
+    const form = document.getElementById('editForm');
+    
+    function openEditModal(button) {
+        form.action = `/admin/participante/edit/${button.dataset.id}`;
+        document.getElementById('edit_nombre').value = button.dataset.nombre;
+        document.getElementById('edit_committe').value = button.dataset.committeId;
+        document.getElementById('edit_pais').value = button.dataset.paisId;
+        document.getElementById('edit_institucion').value = button.dataset.institucionId;
+        modal.classList.remove('hidden');
+    }
+    function closeEditModal() { modal.classList.add('hidden'); }
+</script>
+{% endblock %}
