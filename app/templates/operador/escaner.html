@@ -5,25 +5,29 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-    <!-- 
-      Este es el contenedor donde la librería dibujará el visor de la cámara.
-      Añadimos el atributo `data-validate-url` para pasar la ruta del backend
-      a nuestro archivo scanner.js de una manera limpia.
-    -->
+    <!-- INICIO: Selector de Cámara (oculto por defecto) -->
+    <div id="camera-selector-container" class="mb-4 hidden">
+        <label for="camera-selector" class="block text-sm font-medium text-gray-700">Seleccionar Cámara:</label>
+        <select id="camera-selector" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            <!-- Las opciones se añadirán dinámicamente con JavaScript -->
+        </select>
+    </div>
+    <!-- FIN: Selector de Cámara -->
+
     <div id="qr-reader" 
          data-validate-url="{{ url_for('operador.validar_qr') }}" 
          style="width:100%">
     </div>
     
-    <!-- Contenedor para mostrar los mensajes de éxito o error -->
-    <div id="qr-reader-results" class="mt-4 text-center text-lg"></div>
+    <div id="qr-reader-results" class="mt-4 text-center"></div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <!-- Librería externa para el escaneo de QR -->
-<script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
 
-<!-- Nuestro script personalizado que contiene toda la lógica del escáner -->
-<script src="{{ url_for('static', filename='js/scanner.js') }}?v=1.7"></script>
+<!-- Nuestro script personalizado con la nueva lógica -->
+<!-- Incrementamos la versión a v=1.4 para invalidar el caché -->
+<script src="{{ url_for('static', filename='js/scanner.js') }}?v=1.9"></script>
 {% endblock %}

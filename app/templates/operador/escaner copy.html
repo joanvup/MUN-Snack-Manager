@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Escanear QR{% endblock %}
+{% block header %}Escaner de Códigos QR{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <!-- 
+      Este es el contenedor donde la librería dibujará el visor de la cámara.
+      Añadimos el atributo `data-validate-url` para pasar la ruta del backend
+      a nuestro archivo scanner.js de una manera limpia.
+    -->
+    <div id="qr-reader" 
+         data-validate-url="{{ url_for('operador.validar_qr') }}" 
+         style="width:100%">
+    </div>
+    
+    <!-- Contenedor para mostrar los mensajes de éxito o error -->
+    <div id="qr-reader-results" class="mt-4 text-center text-lg"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Librería externa para el escaneo de QR -->
+<script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+
+<!-- Nuestro script personalizado que contiene toda la lógica del escáner -->
+<script src="{{ url_for('static', filename='js/scanner.js') }}?v=1.7"></script>
+{% endblock %}
