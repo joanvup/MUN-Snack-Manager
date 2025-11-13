@@ -467,6 +467,7 @@ def reportes():
     sort_columns = {
         'fecha_hora': Registro.fecha_hora,
         'participante': Participante.nombre_participante,
+        'saldo': Participante.saldo_merienda,
         'committe': Committe.nombre_committe,
         'institucion': InstitucionEducativa.nombre_institucion,
         'operador': User.username

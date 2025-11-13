@@ -72,6 +72,7 @@
 
                 <th class="pb-4 pt-6 px-6">{{ sort_link('fecha_hora', 'Fecha y Hora') }}</th>
                 <th class="pb-4 pt-6 px-6">{{ sort_link('participante', 'Participante') }}</th>
+                <th class="pb-4 pt-6 px-6 text-center">{{ sort_link('saldo', 'Saldo Actual') }}</th>
                 <th class="pb-4 pt-6 px-6">{{ sort_link('committe', 'Comité') }}</th>
                 <th class="pb-4 pt-6 px-6">{{ sort_link('institucion', 'Institución') }}</th>
                 <th class="pb-4 pt-6 px-6">{{ sort_link('operador', 'Operador') }}</th>
@@ -82,6 +83,7 @@
             <tr class="hover:bg-gray-100">
                 <td class="border-t py-4 px-6">{{ r.fecha_hora | to_local_time }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.nombre_participante }}</td>
+                <td class="border-t py-4 px-6 text-center font-bold text-lg">{{ r.participante.saldo_merienda }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.committe.nombre_committe }}</td>
                 <td class="border-t py-4 px-6">{{ r.participante.institucion.nombre_institucion }}</td>
                 <td class="border-t py-4 px-6">{{ r.operador.username }}</td>
