@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // ... (código para obtener URLs y contenedores sin cambios) ...
+    // Obtenemos el contenedor del lector y la URL de validación que pasamos desde el HTML
     const qrReaderContainer = document.getElementById('qr-reader');
     const validateUrl = qrReaderContainer.dataset.validateUrl;
     const resultContainer = document.getElementById('qr-reader-results');
@@ -7,13 +7,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastResult = null;
 
     function onScanSuccess(decodedText, decodedResult) {
-        // ... (la lógica de parseo y fetch que ya funciona no necesita cambios) ...
         if (decodedText !== lastResult) {
             lastResult = decodedText;
             
             let participantId;
             try {
+                // 1. Intentamos convertir el texto escaneado en un objeto JavaScript
                 const participantData = JSON.parse(decodedText);
+
+                // 2. Verificamos que el objeto tenga una propiedad 'id'
                 if (participantData && participantData.id) {
                     participantId = participantData.id;
                     resultContainer.innerHTML = `<div class="p-3 bg-gray-200 rounded">Escaneado: <strong>${participantData.nombre || 'Participante'}</strong>. Validando...</div>`;
@@ -21,15 +23,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error("El formato del QR es incorrecto (no se encontró 'id').");
                 }
             } catch (error) {
+                // 3. Si el QR no es un JSON válido o no tiene 'id', mostramos un error
                 console.error("Error al parsear el QR:", error);
                 resultContainer.innerHTML = `<div class="p-4 rounded bg-red-100 text-red-800"><strong>Error:</strong> Código QR no válido.</div>`;
                 setTimeout(() => { lastResult = null; }, 2000); 
-                return;
+                return; // Detenemos la ejecución
             }
 
+            // 4. Enviamos SOLO el ID extraído a la URL que obtuvimos del HTML
             fetch(validateUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ 'id_participante': participantId })
             })
             .then(response => response.json())
@@ -52,26 +58,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- INICIO: CAMBIO CLAVE PARA COMPATIBILIDAD CON IPHONE ---
-
-    // Creamos un objeto de configuración más detallado.
-    const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        // Esta es la parte más importante. Le decimos explícitamente al navegador
-        // que queremos la cámara trasera ("environment"). Safari a menudo necesita
-        // esta directiva para funcionar correctamente.
-        videoConstraints: {
-            facingMode: { exact: "environment" }
+    // Inicializamos el escáner
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader", 
+        { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 } 
         },
-        // Aumenta la probabilidad de éxito en diferentes condiciones de iluminación.
-        rememberLastUsedCamera: true
-    };
-
-    // Inicializamos el escáner con la nueva configuración.
-    const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", config, false);
-    
-    // --- FIN: CAMBIO CLAVE ---
-    
+        false
+    );
     html5QrcodeScanner.render(onScanSuccess);
 });
