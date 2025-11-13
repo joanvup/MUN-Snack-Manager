@@ -51,27 +51,33 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+    
+    function onScanFailure(error) {
+        // Este callback opcional puede ayudar a diagnosticar problemas.
+        // Se llama repetidamente, así que no mostramos un error visible al usuario
+        // para no ser molestos, pero lo registramos en la consola para depuración.
+        // console.warn(`Código QR no detectado: ${error}`);
+    }
 
-    // --- INICIO: CAMBIO CLAVE PARA COMPATIBILIDAD CON IPHONE ---
+    // --- INICIO: CAMBIO CLAVE PARA COMPATIBILIDAD UNIVERSAL ---
 
-    // Creamos un objeto de configuración más detallado.
     const config = {
         fps: 10,
         qrbox: { width: 250, height: 250 },
-        // Esta es la parte más importante. Le decimos explícitamente al navegador
-        // que queremos la cámara trasera ("environment"). Safari a menudo necesita
-        // esta directiva para funcionar correctamente.
-        videoConstraints: {
-            facingMode: { exact: "environment" }
-        },
-        // Aumenta la probabilidad de éxito en diferentes condiciones de iluminación.
-        rememberLastUsedCamera: true
+        rememberLastUsedCamera: true,
+        // Aquí está la nueva estrategia.
+        // Usamos un array de restricciones. El navegador intentará la primera.
+        // Si falla con OverconstrainedError, intentará la segunda, y así sucesivamente.
+        videoConstraints: [
+            { facingMode: { exact: "environment" } }, // 1. Intenta la cámara trasera de forma estricta (para iOS)
+            { facingMode: "environment" },            // 2. Si falla, intenta la cámara trasera de forma flexible
+            { facingMode: "user" }                     // 3. Si todo lo demás falla, pide la cámara frontal (selfie)
+        ]
     };
 
-    // Inicializamos el escáner con la nueva configuración.
-    const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", config, false);
+    const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", config, /* verbose= */ false);
     
     // --- FIN: CAMBIO CLAVE ---
     
-    html5QrcodeScanner.render(onScanSuccess);
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 });
